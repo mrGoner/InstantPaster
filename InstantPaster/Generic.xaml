@@ -1,0 +1,59 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:InstantPaster"
+                    xmlns:viewModels="clr-namespace:InstantPaster.ViewModels"
+                    xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity">
+    <DataTemplate DataType="{x:Type viewModels:MainViewModel}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="25"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="50"/>
+            </Grid.RowDefinitions>
+            <Menu Grid.Row="0" Margin="2 0 2 0">
+                <MenuItem Header="Файл">
+                    <MenuItem Header="Открыть"/>
+                    <MenuItem Header="Сохранить"/>
+                    <MenuItem Header="Сохранить как"/>
+                </MenuItem>
+            </Menu>
+            <DataGrid Name="DataGrid" Grid.Row="1" ItemsSource="{Binding Configuration}" Margin="2 5 2 0" 
+                      CanUserDeleteRows="False" CanUserAddRows="False" 
+                      AutoGenerateColumns="False" RowHeight="30" Background="White" SelectedItem="{Binding SelectedConfiguration}">
+                <DataGrid.Columns >
+                    <DataGridTemplateColumn Header="Хоткей" Width="100">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate DataType="local:HotKeyConfiguration">
+                                <TextBlock Text="{Binding HotKey}"></TextBlock>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                        <DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate DataType="local:HotKeyConfiguration">
+                                <TextBox Text="{Binding HotKey}" IsReadOnly="True">
+                                    <i:Interaction.Behaviors>
+                                        <local:KeyListeningBehavior/>
+                                    </i:Interaction.Behaviors>
+                                </TextBox>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellEditingTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="Описание" Binding="{Binding Description}" Width="200"/>
+                    <DataGridTextColumn Header="Команда" Binding="{Binding PastedText}" Width="*"/>
+                </DataGrid.Columns>
+                <DataGrid.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem Name="AddMenuItem" Header="Добавить"/>
+                        <MenuItem Name="RemoveMenuItem" Header="Удалить"/>
+                        <MenuItem Name="PropertiesMenuItem" Header="Подробнее"/>
+                    </ContextMenu>
+                </DataGrid.ContextMenu>
+            </DataGrid>
+        </Grid>
+        <DataTemplate.Triggers>
+            <Trigger SourceName="DataGrid" Property="SelectedItem" Value="{x:Null}">
+                <Setter TargetName="RemoveMenuItem" Property="Visibility" Value="Collapsed"/>
+                <Setter TargetName="PropertiesMenuItem" Property="Visibility" Value="Collapsed"/>
+            </Trigger>
+        </DataTemplate.Triggers>
+    </DataTemplate>
+</ResourceDictionary>
