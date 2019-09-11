@@ -1,28 +1,83 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 using Gma.System.MouseKeyHook;
+using Gma.System.MouseKeyHook.Implementation;
 
 namespace InstantPaster.Hook
 {
     internal class HookEngine
     {
-        private readonly IKeyboardMouseEvents m_hooks;
+        private IKeyboardMouseEvents m_hooks;
+        private List<KeyValuePair<Combination, Action>> m_pairs;
 
-        public HookEngine()
+        public void ApplyHotKeys(List<HotKeyConfiguration> _configurations)
         {
-            m_hooks = Gma.System.MouseKeyHook.Hook.GlobalEvents();
+            if (_configurations == null)
+                throw new ArgumentNullException(nameof(_configurations));
 
-            m_hooks.KeyDown += GlobalHookKeyPress;
-            m_hooks.OnCombination(new List<KeyValuePair<Combination, Action>>
+            try
             {
-                new KeyValuePair<Combination, Action>(Combination.FromString("Alt+C"), () => Console.WriteLine("Detected"))
-            });
+                m_hooks = Gma.System.MouseKeyHook.Hook.GlobalEvents();
+                m_pairs = new List<KeyValuePair<Combination, Action>>();
+
+                foreach (var configuration in _configurations)
+                {
+                    m_pairs.Add(new KeyValuePair<Combination, Action>(Combination.FromString(configuration.Combination),
+                        () =>
+                        {
+                            Console.WriteLine("Detected");
+
+                            configuration.HotKeyAction(configuration.Content);
+                        }));
+                }
+
+                OnCombination(m_pairs);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
         }
 
-        private void GlobalHookKeyPress(object sender, KeyEventArgs e)
+        public void Change()
         {
-            Console.WriteLine($"Pressed + {e.KeyData.ToString()}");
+            m_pairs.Add(new KeyValuePair<Combination, Action>(Combination.FromString("P"),
+                () => { Console.WriteLine("Detected NEw"); }));
+        }
+
+        public void OnCombination(IEnumerable<KeyValuePair<Combination, Action>> _map)
+        {
+            var watchlists = _map.GroupBy(_k => _k.Key.TriggerKey)
+                .ToDictionary(_g => _g.Key, _g => _g.ToArray());
+
+            m_hooks.KeyDown += (_sender, _e) =>
+            {
+                if (watchlists.TryGetValue(_e.KeyCode, out var element))
+                {
+                    var state = KeyboardState.GetCurrent();
+                    Action action = null;
+                    var maxLength = 0;
+
+                    foreach (var current in element)
+                    {
+                        var matches = current.Key.Chord.All(state.IsDown);
+
+                        if (!matches)
+                            continue;
+
+                        if (maxLength > current.Key.ChordLength)
+                            continue;
+
+                        maxLength = current.Key.ChordLength;
+                        action = current.Value;
+                    }
+
+                    action?.Invoke();
+                }
+            };
         }
     }
 }
