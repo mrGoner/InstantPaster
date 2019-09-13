@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace InstantPaster
+namespace InstantPaster.Hook
 {
     public class HotKeyConfiguration
     {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace InstantPaster
+namespace InstantPaster.Settings
 {
     internal class Configuration
     {

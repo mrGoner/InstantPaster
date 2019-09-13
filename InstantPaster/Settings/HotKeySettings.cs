@@ -1,4 +1,4 @@
-﻿namespace InstantPaster
+﻿namespace InstantPaster.Settings
 {
     internal class HotKeySettings
     {

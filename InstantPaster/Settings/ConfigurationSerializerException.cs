@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace InstantPaster
+namespace InstantPaster.Settings
 {
     public class ConfigurationSerializerException : Exception
     {

@@ -19,17 +19,18 @@
             </Menu>
             <DataGrid Name="DataGrid" Grid.Row="1" ItemsSource="{Binding HotKeys}" Margin="2 5 2 0" 
                       CanUserDeleteRows="False" CanUserAddRows="False" 
-                      AutoGenerateColumns="False" RowHeight="30" Background="White" SelectedItem="{Binding SelectedHotKey}">
-                <DataGrid.Columns >
-                    <DataGridTemplateColumn Header="Хоткей" Width="100">
+                      AutoGenerateColumns="False" RowHeight="30" Background="White" 
+                      SelectedItem="{Binding SelectedHotKey}">
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn x:Name="HotkeyColumn" Header="Хоткей" Width="100">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate DataType="viewModels:HotKeyViewModel">
-                                <TextBlock Text="{Binding HotKey}"></TextBlock>
+                                <TextBlock Text="{Binding HotKey, ValidatesOnDataErrors=True}"></TextBlock>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                         <DataGridTemplateColumn.CellEditingTemplate>
                             <DataTemplate DataType="viewModels:HotKeyViewModel">
-                                <TextBox Text="{Binding HotKey}" IsReadOnly="True">
+                                <TextBox Text="{Binding HotKey, UpdateSourceTrigger=LostFocus}" IsReadOnly="True">
                                     <i:Interaction.Behaviors>
                                         <local:KeyListeningBehavior/>
                                     </i:Interaction.Behaviors>
@@ -38,7 +39,7 @@
                         </DataGridTemplateColumn.CellEditingTemplate>
                     </DataGridTemplateColumn>
                     <DataGridTextColumn Header="Описание" Binding="{Binding Description}" Width="200"/>
-                    <DataGridTextColumn Header="Команда" Binding="{Binding PastedText}" Width="*"/>
+                    <DataGridTextColumn Header="Команда" Binding="{Binding PastedText, UpdateSourceTrigger=LostFocus}" Width="*"/>
                 </DataGrid.Columns>
                 <DataGrid.ContextMenu>
                     <ContextMenu>
@@ -47,6 +48,14 @@
                         <MenuItem Name="PropertiesMenuItem" Header="Подробнее"/>
                     </ContextMenu>
                 </DataGrid.ContextMenu>
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="BeginningEdit">
+                        <i:InvokeCommandAction Command="{Binding StopTracking}"/>
+                    </i:EventTrigger>
+                    <i:EventTrigger EventName="CellEditEnding">
+                        <i:InvokeCommandAction Command="{Binding StartTracking}"/>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
             </DataGrid>
         </Grid>
         <DataTemplate.Triggers>

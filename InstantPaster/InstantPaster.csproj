@@ -68,14 +68,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="ActionType.cs" />
-    <Compile Include="Configuration.cs" />
-    <Compile Include="ConfigurationSerializerException.cs" />
-    <Compile Include="HotKeyConfiguration.cs" />
-    <Compile Include="ConfigurationSerializer.cs" />
+    <Compile Include="IChangeTracker.cs" />
+    <Compile Include="Keys.cs" />
+    <Compile Include="Settings\ActionType.cs" />
+    <Compile Include="Settings\Configuration.cs" />
+    <Compile Include="Settings\ConfigurationSerializerException.cs" />
+    <Compile Include="Hook\HotKeyConfiguration.cs" />
+    <Compile Include="Settings\ConfigurationSerializer.cs" />
     <Compile Include="HotKeyConfigurationFactory.cs" />
-    <Compile Include="HotKeySettings.cs" />
-    <Compile Include="RelayCommand.cs" />
+    <Compile Include="Settings\HotKeySettings.cs" />
     <Compile Include="ViewModels\HotKeyViewModel.cs" />
     <Compile Include="KeyListeningBehavior.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />

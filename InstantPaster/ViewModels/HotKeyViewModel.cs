@@ -2,12 +2,13 @@
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Windows.Forms;
 
 namespace InstantPaster.ViewModels
 {
-    public class HotKeyViewModel : INotifyPropertyChanged, IDataErrorInfo
+    internal class HotKeyViewModel : INotifyPropertyChanged, IDataErrorInfo, IChangeTracker
     {
+        public event CombinationChanged CombinationChanged;
+
         public string HotKey
         {
             get => m_hotKey;
@@ -16,7 +17,9 @@ namespace InstantPaster.ViewModels
                 if (m_hotKey != value)
                 {
                     m_hotKey = value;
+
                     OnPropertyChanged();
+                    OnChanged();
                 }
             }
         }
@@ -48,6 +51,7 @@ namespace InstantPaster.ViewModels
                     m_pastedText = value;
 
                     OnPropertyChanged();
+                    OnChanged();
                 }
             }
         }
@@ -71,21 +75,37 @@ namespace InstantPaster.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(_propertyName));
         }
 
-        public string this[string _columnName] => Validate();
-
-        public string Error => Validate();
-       
-        private string Validate()
+        private void OnChanged()
         {
-            try
+            if (Validate())
+                CombinationChanged?.Invoke();
+        }
+
+        public string this[string _columnName]
+        {
+            get
             {
-                var enumerable = m_hotKey.Split('+').Select(_p => Enum.Parse(typeof(Keys), _p)).Cast<Keys>().ToList();
+                if (_columnName == nameof(HotKey))
+                    return Validate() ? null : "Error";
 
                 return null;
             }
-            catch (Exception e)
+        }
+
+        public string Error => null;
+       
+        private bool Validate()
+        {
+            try
             {
-                return "Error";
+                var v = m_hotKey.Split('+').Select(_p => Enum.Parse(typeof(System.Windows.Forms.Keys), _p))
+                    .Cast<System.Windows.Forms.Keys>().ToList();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
             }
         }
     }

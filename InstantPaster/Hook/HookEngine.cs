@@ -7,33 +7,73 @@ using Gma.System.MouseKeyHook.Implementation;
 
 namespace InstantPaster.Hook
 {
-    internal class HookEngine
+    internal class HookEngine : IDisposable
     {
-        private IKeyboardMouseEvents m_hooks;
-        private List<KeyValuePair<Combination, Action>> m_pairs;
+        private readonly IKeyboardMouseEvents m_hooks;
+        private Dictionary<System.Windows.Forms.Keys, KeyValuePair<Combination, Action> []> m_watchList;
+        private bool m_isNeedTracking;
 
-        public void ApplyHotKeys(List<HotKeyConfiguration> _configurations)
+        public HookEngine()
+        {
+            m_hooks = Gma.System.MouseKeyHook.Hook.GlobalEvents();
+            m_hooks.KeyDown += HooksOnKeyDown;
+        }
+
+        private void HooksOnKeyDown(object _sender, KeyEventArgs _e)
+        {
+            if(m_watchList == null || !m_isNeedTracking)
+                return;
+
+            if (m_watchList.TryGetValue(_e.KeyCode, out var element))
+            {
+                var state = KeyboardState.GetCurrent();
+                Action action = null;
+                var maxLength = 0;
+                var needHandle = false;
+
+                foreach (var current in element)
+                {
+                    var matches = current.Key.Chord.All(state.IsDown);
+
+                    if (!matches)
+                        continue;
+
+                    if (maxLength > current.Key.ChordLength)
+                        continue;
+
+                    maxLength = current.Key.ChordLength;
+                    action = current.Value;
+                    needHandle = true;
+                }
+
+                if (needHandle)
+                {
+                    _e.Handled = true;
+                    Console.WriteLine("Handeled");
+                }
+
+                action?.Invoke();
+            }
+        }
+
+        public void SetHotKeys(List<HotKeyConfiguration> _configurations)
         {
             if (_configurations == null)
                 throw new ArgumentNullException(nameof(_configurations));
 
+            m_isNeedTracking = false;
+
             try
             {
-                m_hooks = Gma.System.MouseKeyHook.Hook.GlobalEvents();
-                m_pairs = new List<KeyValuePair<Combination, Action>>();
+                var pairs = new List<KeyValuePair<Combination, Action>>();
 
                 foreach (var configuration in _configurations)
                 {
-                    m_pairs.Add(new KeyValuePair<Combination, Action>(Combination.FromString(configuration.Combination),
-                        () =>
-                        {
-                            Console.WriteLine("Detected");
-
-                            configuration.HotKeyAction(configuration.Content);
-                        }));
+                    pairs.Add(new KeyValuePair<Combination, Action>(Combination.FromString(configuration.Combination),
+                        () => configuration.HotKeyAction(configuration.Content)));
                 }
 
-                OnCombination(m_pairs);
+                InitializeMap(pairs);
             }
             catch (Exception e)
             {
@@ -42,42 +82,26 @@ namespace InstantPaster.Hook
             }
         }
 
-        public void Change()
+        public void StopTracking()
         {
-            m_pairs.Add(new KeyValuePair<Combination, Action>(Combination.FromString("P"),
-                () => { Console.WriteLine("Detected NEw"); }));
+            m_isNeedTracking = false;
         }
 
-        public void OnCombination(IEnumerable<KeyValuePair<Combination, Action>> _map)
+        public void StartTracking()
         {
-            var watchlists = _map.GroupBy(_k => _k.Key.TriggerKey)
+            m_isNeedTracking = true;
+        }
+
+        private void InitializeMap(IEnumerable<KeyValuePair<Combination, Action>> _map)
+        {
+            m_watchList = _map.GroupBy(_k => _k.Key.TriggerKey)
                 .ToDictionary(_g => _g.Key, _g => _g.ToArray());
+        }
 
-            m_hooks.KeyDown += (_sender, _e) =>
-            {
-                if (watchlists.TryGetValue(_e.KeyCode, out var element))
-                {
-                    var state = KeyboardState.GetCurrent();
-                    Action action = null;
-                    var maxLength = 0;
-
-                    foreach (var current in element)
-                    {
-                        var matches = current.Key.Chord.All(state.IsDown);
-
-                        if (!matches)
-                            continue;
-
-                        if (maxLength > current.Key.ChordLength)
-                            continue;
-
-                        maxLength = current.Key.ChordLength;
-                        action = current.Value;
-                    }
-
-                    action?.Invoke();
-                }
-            };
+        public void Dispose()
+        {
+            m_hooks.KeyDown -= HooksOnKeyDown;
+            m_hooks.Dispose();
         }
     }
 }

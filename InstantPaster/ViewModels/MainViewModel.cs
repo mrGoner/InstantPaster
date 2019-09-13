@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 using System.Windows.Input;
 using InstantPaster.Hook;
+using InstantPaster.Settings;
 using Microsoft.Expression.Interactivity.Core;
 using Clipboard = System.Windows.Clipboard;
 
@@ -18,6 +19,7 @@ namespace InstantPaster.ViewModels
         public ObservableCollection<HotKeyViewModel> HotKeys { get; set; }
 
         public HotKeyViewModel SelectedHotKey { get; set; }
+        public bool HotKeyEditing { get; set; }
 
         public ICommand SaveConfigurationCommand { get; }
         public ICommand SaveAsConfigurationCommand { get; }
@@ -26,6 +28,8 @@ namespace InstantPaster.ViewModels
         public ICommand AddHotKeyCommand { get; }
         public ICommand RemoveHotKeyCommand { get; }
         public ICommand OpenDetailsCommand { get; }
+        public ICommand StopTracking { get; }
+        public ICommand StartTracking { get; }
         
         private readonly ConfigurationSerializer m_configurationSerializer;
         private readonly HookEngine m_hookEngine;
@@ -36,7 +40,7 @@ namespace InstantPaster.ViewModels
             HotKeys = new ObservableCollection<HotKeyViewModel>();
             m_configurationSerializer = new ConfigurationSerializer();
             m_hookEngine = new HookEngine();
-            m_factory = new HotKeyConfigurationFactory(new Dictionary<ActionType, Action<string>>()
+            m_factory = new HotKeyConfigurationFactory(new Dictionary<ActionType, Action<string>>
             {
                 { ActionType.InsertText, PastText}
             });
@@ -46,14 +50,35 @@ namespace InstantPaster.ViewModels
 
             AddHotKeyCommand = new ActionCommand(() =>
             {
-                HotKeys.Add(new HotKeyViewModel(string.Empty, string.Empty, string.Empty));
+                var hotKeyVm = new HotKeyViewModel(string.Empty, string.Empty, string.Empty);
+                hotKeyVm.CombinationChanged += HotKeyViewModelChanged;
+
+                HotKeys.Add(hotKeyVm);
             });
 
             RemoveHotKeyCommand = new ActionCommand(() =>
             {
+                SelectedHotKey.CombinationChanged -= HotKeyViewModelChanged;
                 HotKeys.Remove(SelectedHotKey);
                 SelectedHotKey = null;
+
+                m_hookEngine.SetHotKeys(GenerateConfigurations());
+                m_hookEngine.StartTracking();
             });
+
+            StopTracking = new ActionCommand(() => m_hookEngine.StopTracking());
+            StartTracking = new ActionCommand(() => m_hookEngine.StartTracking());
+        }
+
+        private List<HotKeyConfiguration> GenerateConfigurations()
+        {
+            return HotKeys.Select(_x => m_factory.Create(_x.HotKey, _x.PastedText, ActionType.InsertText)).ToList();
+        }
+
+        private void HotKeyViewModelChanged()
+        {
+            m_hookEngine.SetHotKeys(GenerateConfigurations());
+            m_hookEngine.StartTracking();
         }
 
         private void LoadConfiguration()
@@ -64,11 +89,19 @@ namespace InstantPaster.ViewModels
                 var settings = m_configurationSerializer.Deserialize(data).HotKeys;
                 var hotKeyConfigurations = settings.Select(_hotKey => m_factory.Create(_hotKey)).ToList();
 
-                m_hookEngine.ApplyHotKeys(hotKeyConfigurations);
+                m_hookEngine.SetHotKeys(hotKeyConfigurations);
 
-                HotKeys = new ObservableCollection<HotKeyViewModel>(settings.Select(_x =>
-                    new HotKeyViewModel(_x.Combination, _x.Description, _x.ActionContent)));
-                
+                var viewModels = settings.Select(_x =>
+                    new HotKeyViewModel(_x.Combination, _x.Description, _x.ActionContent)).ToList();
+
+                foreach (var hotKeyViewModel in viewModels)
+                {
+                    hotKeyViewModel.CombinationChanged += HotKeyViewModelChanged;
+                }
+
+                HotKeys = new ObservableCollection<HotKeyViewModel>(viewModels);
+
+                m_hookEngine.StartTracking();
                 OnPropertyChanged(nameof(HotKeys));
             }
             catch (Exception e)
@@ -97,12 +130,11 @@ namespace InstantPaster.ViewModels
 
         private void PastText(string _content)
         {
-            Console.WriteLine($"Pasted {_content}");
             Clipboard.SetText(_content);
 
             SendKeys.SendWait("^v");
 
-            m_hookEngine.Change();
+            Console.WriteLine($"Sended {_content}");
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
