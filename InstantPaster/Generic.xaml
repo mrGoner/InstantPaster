@@ -12,9 +12,10 @@
             </Grid.RowDefinitions>
             <Menu Grid.Row="0" Margin="2 0 2 0">
                 <MenuItem Header="Файл">
+                    <MenuItem Header="Новая конфигурация" Command="{Binding NewConfigurationCommand}"/>
                     <MenuItem Header="Открыть" Command="{Binding LoadConfigurationCommand}"/>
-                    <MenuItem Header="Сохранить" Command="{Binding SaveConfigurationCommand}"/>
-                    <MenuItem Header="Сохранить как"/>
+                    <MenuItem Name ="SaveMenuItem" IsEnabled="{Binding IsDocumentLoaded}" Header="Сохранить" Command="{Binding SaveConfigurationCommand}"/>
+                    <MenuItem Name ="SaveAsMenuItem" Header="Сохранить как" Command="{Binding SaveAsConfigurationCommand}"/>
                 </MenuItem>
             </Menu>
             <DataGrid Name="DataGrid" Grid.Row="1" ItemsSource="{Binding HotKeys}" Margin="2 5 2 0" 
