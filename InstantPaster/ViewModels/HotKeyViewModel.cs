@@ -2,12 +2,16 @@
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Windows.Input;
+using InstantPaster.Settings;
+using Microsoft.Expression.Interactivity.Core;
 
 namespace InstantPaster.ViewModels
 {
     internal class HotKeyViewModel : INotifyPropertyChanged, IDataErrorInfo, IChangeTracker
     {
         public event CombinationChanged CombinationChanged;
+        public event PropertyChangedEventHandler PropertyChanged;
 
         public string HotKey
         {
@@ -55,19 +59,35 @@ namespace InstantPaster.ViewModels
                 }
             }
         }
-        public event PropertyChangedEventHandler PropertyChanged;
+
+        public ActionType SelectedActionType
+        {
+            get => m_actionType;
+
+            set
+            {
+                if (m_actionType != value)
+                {
+                    m_actionType = value;
+
+                    PastedText = string.Empty;
+
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         private string m_hotKey;
         private string m_description;
         private string m_pastedText;
-        private bool m_isHotKeyEditing;
+        private ActionType m_actionType;
 
-
-        public HotKeyViewModel(string _hotKey, string _description, string _pastedText)
+        public HotKeyViewModel(string _hotKey, string _description, string _pastedText, ActionType _actionType)
         {
             HotKey = _hotKey;
             Description = _description;
             PastedText = _pastedText;
+            m_actionType = _actionType;
         }
 
         protected virtual void OnPropertyChanged([CallerMemberName] string _propertyName = null)

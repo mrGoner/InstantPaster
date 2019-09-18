@@ -3,6 +3,7 @@
                     xmlns:local="clr-namespace:InstantPaster"
                     xmlns:viewModels="clr-namespace:InstantPaster.ViewModels"
                     xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity">
+
     <DataTemplate DataType="{x:Type viewModels:MainViewModel}">
         <Grid>
             <Grid.RowDefinitions>
@@ -40,13 +41,25 @@
                         </DataGridTemplateColumn.CellEditingTemplate>
                     </DataGridTemplateColumn>
                     <DataGridTextColumn Header="Описание" Binding="{Binding Description}" Width="200"/>
+                    <DataGridComboBoxColumn Header="Тип команды" SelectedItemBinding="{Binding SelectedActionType, UpdateSourceTrigger=PropertyChanged}">
+                        <DataGridComboBoxColumn.ElementStyle>
+                            <Style TargetType="{x:Type ComboBox}">
+                                <Setter Property="ItemsSource" Value="{Binding Path=DataContext.Actions, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+                            </Style>
+                        </DataGridComboBoxColumn.ElementStyle>
+                        <DataGridComboBoxColumn.EditingElementStyle>
+                            <Style TargetType="{x:Type ComboBox}">
+                                <Setter Property="ItemsSource" Value="{Binding Path=DataContext.Actions, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+                            </Style>
+                        </DataGridComboBoxColumn.EditingElementStyle>
+                    </DataGridComboBoxColumn>
                     <DataGridTextColumn Header="Команда" Binding="{Binding PastedText, UpdateSourceTrigger=LostFocus}" Width="*"/>
                 </DataGrid.Columns>
                 <DataGrid.ContextMenu>
                     <ContextMenu>
                         <MenuItem Name="AddMenuItem" Header="Добавить" Command="{Binding AddHotKeyCommand}"/>
                         <MenuItem Name="RemoveMenuItem" Header="Удалить" Command="{Binding RemoveHotKeyCommand}"/>
-                        <MenuItem Name="PropertiesMenuItem" Header="Подробнее"/>
+                        <MenuItem Name="PropertiesMenuItem" Header="Подробнее" Command="{Binding OpenDetailsCommand}"/>
                     </ContextMenu>
                 </DataGrid.ContextMenu>
                 <i:Interaction.Triggers>
@@ -65,5 +78,17 @@
                 <Setter TargetName="PropertiesMenuItem" Property="Visibility" Value="Collapsed"/>
             </Trigger>
         </DataTemplate.Triggers>
+    </DataTemplate>
+
+    <DataTemplate DataType="{x:Type viewModels:DetailViewModel}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="30"/>
+            </Grid.RowDefinitions>
+            <TextBox Height="Auto" Text="{Binding Content, UpdateSourceTrigger= PropertyChanged}" 
+                      Grid.Row="0" Margin="3"/>
+            <Button Content="Сохранить" Width="70" Grid.Row="1" HorizontalAlignment="Right" Margin="0 0 3 3" Command="{Binding CloseCommand}"/>
+        </Grid>
     </DataTemplate>
 </ResourceDictionary>

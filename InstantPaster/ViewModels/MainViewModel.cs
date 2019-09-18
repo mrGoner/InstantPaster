@@ -6,12 +6,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
 using InstantPaster.Hook;
 using InstantPaster.Settings;
 using Microsoft.Expression.Interactivity.Core;
 using Clipboard = System.Windows.Clipboard;
+using MessageBox = System.Windows.Forms.MessageBox;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 
 namespace InstantPaster.ViewModels
@@ -33,7 +35,9 @@ namespace InstantPaster.ViewModels
 
         public ICommand StopTracking { get; }
         public ICommand StartTracking { get; }
-        
+
+        public ActionType[] Actions { get; } = Enum.GetValues(typeof(ActionType)) as ActionType[];
+
         private readonly ConfigurationSerializer m_configurationSerializer;
         private readonly HookEngine m_hookEngine;
         private readonly HotKeyConfigurationFactory m_factory;
@@ -75,7 +79,7 @@ namespace InstantPaster.ViewModels
 
             AddHotKeyCommand = new ActionCommand(() =>
             {
-                var hotKeyVm = new HotKeyViewModel(string.Empty, string.Empty, string.Empty);
+                var hotKeyVm = new HotKeyViewModel(string.Empty, string.Empty, string.Empty, ActionType.InsertText);
                 hotKeyVm.CombinationChanged += HotKeyViewModelChanged;
 
                 HotKeys.Add(hotKeyVm);
@@ -92,6 +96,7 @@ namespace InstantPaster.ViewModels
 
             StopTracking = new ActionCommand(() => m_hookEngine.StopTracking());
             StartTracking = new ActionCommand(() => m_hookEngine.StartTracking());
+            OpenDetailsCommand = new ActionCommand(OpenDetailsWindow);
         }
 
         private void HotKeyViewModelChanged()
@@ -124,7 +129,7 @@ namespace InstantPaster.ViewModels
                     m_hookEngine.SetHotKeys(hotKeyConfigurations);
 
                     var viewModels = settings.Select(_x =>
-                        new HotKeyViewModel(_x.Combination, _x.Description, _x.ActionContent)).ToList();
+                        new HotKeyViewModel(_x.Combination, _x.Description, _x.ActionContent, _x.ActionType)).ToList();
 
                     foreach (var hotKeyViewModel in viewModels)
                     {
@@ -158,6 +163,29 @@ namespace InstantPaster.ViewModels
             }
             
             HotKeys.Clear();
+        }
+
+        private void OpenDetailsWindow()
+        {
+            m_hookEngine.StopTracking();
+
+            var detailsWindow = new DetailsWindow
+            {
+                WindowStartupLocation = WindowStartupLocation.CenterScreen,
+                WindowStyle = WindowStyle.ToolWindow
+            };
+
+            var closeAction = new Action<string>(_content =>
+            {
+                SelectedHotKey.PastedText = _content;
+                detailsWindow.Close();
+            });
+
+            detailsWindow.DataContext = new DetailViewModel(closeAction, SelectedHotKey.PastedText);
+
+            detailsWindow.ShowDialog();
+
+            m_hookEngine.StartTracking();
         }
 
         private void SaveConfiguration(string _savePath)
@@ -222,4 +250,3 @@ namespace InstantPaster.ViewModels
         }
     }
 }
-
