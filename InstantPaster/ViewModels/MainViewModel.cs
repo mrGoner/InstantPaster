@@ -101,7 +101,7 @@ namespace InstantPaster.ViewModels
 
         private void HotKeyViewModelChanged()
         {
-            var keys = HotKeys.Select(_x => m_factory.Create(_x.HotKey, _x.PastedText, ActionType.InsertText)).ToList();
+            var keys = HotKeys.Select(_x => m_factory.Create(_x.HotKey, _x.PastedText, _x.SelectedActionType)).ToList();
             m_hookEngine.SetHotKeys(keys);
             m_hookEngine.StartTracking();
         }
@@ -163,6 +163,7 @@ namespace InstantPaster.ViewModels
             }
             
             HotKeys.Clear();
+            IsDocumentLoaded = false;
         }
 
         private void OpenDetailsWindow()
@@ -193,7 +194,7 @@ namespace InstantPaster.ViewModels
             try
             {
                 var result = m_configurationSerializer.Serialize(new Configuration(HotKeys.Select(_hotKey =>
-                    new HotKeySettings(_hotKey.HotKey, _hotKey.Description, ActionType.InsertText,
+                    new HotKeySettings(_hotKey.HotKey, _hotKey.Description, _hotKey.SelectedActionType,
                         _hotKey.PastedText)).ToList()));
 
                 File.WriteAllText(_savePath, result);

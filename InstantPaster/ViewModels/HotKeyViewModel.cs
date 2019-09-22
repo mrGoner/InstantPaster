@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using InstantPaster.Settings;
 using Microsoft.Expression.Interactivity.Core;
+using Microsoft.Win32;
 
 namespace InstantPaster.ViewModels
 {
@@ -77,6 +78,8 @@ namespace InstantPaster.ViewModels
             }
         }
 
+        public ICommand OpenFileBrowserCommand { get; }
+
         private string m_hotKey;
         private string m_description;
         private string m_pastedText;
@@ -88,6 +91,7 @@ namespace InstantPaster.ViewModels
             Description = _description;
             PastedText = _pastedText;
             m_actionType = _actionType;
+            OpenFileBrowserCommand = new ActionCommand(OpenFileBrowser);
         }
 
         protected virtual void OnPropertyChanged([CallerMemberName] string _propertyName = null)
@@ -126,6 +130,24 @@ namespace InstantPaster.ViewModels
             catch (Exception ex)
             {
                 return false;
+            }
+        }
+
+        private void OpenFileBrowser()
+        {
+            var folderBrowser = new OpenFileDialog
+            {
+                CheckFileExists = true,
+                Filter = "AnyFiles|*.*;",
+                Multiselect = false,
+                InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop)
+            };
+
+            var openResult = folderBrowser.ShowDialog();
+
+            if(openResult.HasValue && openResult.Value)
+            {
+                PastedText = folderBrowser.FileName;
             }
         }
     }
