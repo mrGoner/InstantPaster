@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
@@ -45,7 +46,7 @@ namespace InstantPaster.ViewModels
         }
 
 
-        public string PastedText
+        public string Content
         {
             get => m_pastedText;
 
@@ -71,7 +72,7 @@ namespace InstantPaster.ViewModels
                 {
                     m_actionType = value;
 
-                    PastedText = string.Empty;
+                    Content = string.Empty;
 
                     OnPropertyChanged();
                 }
@@ -89,7 +90,7 @@ namespace InstantPaster.ViewModels
         {
             HotKey = _hotKey;
             Description = _description;
-            PastedText = _pastedText;
+            Content = _pastedText;
             m_actionType = _actionType;
             OpenFileBrowserCommand = new ActionCommand(OpenFileBrowser);
         }
@@ -111,6 +112,8 @@ namespace InstantPaster.ViewModels
             {
                 if (_columnName == nameof(HotKey))
                     return Validate() ? null : "Error";
+                if (_columnName == nameof(Content) && SelectedActionType == ActionType.ExecutePath)
+                    return File.Exists(Content) ? null : "Error";
 
                 return null;
             }
@@ -124,7 +127,7 @@ namespace InstantPaster.ViewModels
             {
                 var v = m_hotKey.Split('+').Select(_p => Enum.Parse(typeof(System.Windows.Forms.Keys), _p))
                     .Cast<System.Windows.Forms.Keys>().ToList();
-
+               
                 return true;
             }
             catch (Exception ex)
@@ -147,7 +150,7 @@ namespace InstantPaster.ViewModels
 
             if(openResult.HasValue && openResult.Value)
             {
-                PastedText = folderBrowser.FileName;
+                Content = folderBrowser.FileName;
             }
         }
     }

@@ -10,6 +10,7 @@ using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
 using InstantPaster.Hook;
+using InstantPaster.Properties;
 using InstantPaster.Settings;
 using Microsoft.Expression.Interactivity.Core;
 using Clipboard = System.Windows.Clipboard;
@@ -22,7 +23,15 @@ namespace InstantPaster.ViewModels
     {
         public ObservableCollection<HotKeyViewModel> HotKeys { get; set; }
 
-        public HotKeyViewModel SelectedHotKey { get; set; }
+        public HotKeyViewModel SelectedHotKey
+        {
+            get => m_selectedKeyViewModel;
+            set
+            {
+                m_selectedKeyViewModel = value;
+                OnPropertyChanged();
+            }
+        }
 
         public ICommand NewConfigurationCommand { get; set; }
         public ICommand SaveConfigurationCommand { get; }
@@ -42,6 +51,7 @@ namespace InstantPaster.ViewModels
         private readonly HookEngine m_hookEngine;
         private readonly HotKeyConfigurationFactory m_factory;
         private bool m_isDocumentLoaded;
+        private HotKeyViewModel m_selectedKeyViewModel;
 
 
         public bool IsDocumentLoaded
@@ -101,7 +111,7 @@ namespace InstantPaster.ViewModels
 
         private void HotKeyViewModelChanged()
         {
-            var keys = HotKeys.Select(_x => m_factory.Create(_x.HotKey, _x.PastedText, _x.SelectedActionType)).ToList();
+            var keys = HotKeys.Select(_x => m_factory.Create(_x.HotKey, _x.Content, _x.SelectedActionType)).ToList();
             m_hookEngine.SetHotKeys(keys);
             m_hookEngine.StartTracking();
         }
@@ -113,7 +123,7 @@ namespace InstantPaster.ViewModels
                 var folderBrowser = new OpenFileDialog
                 {
                     CheckFileExists = true,
-                    Filter = "HotKeysConfiguration|*.hkconf;",
+                    Filter = Resources.OpenSaveDIalogFilter,
                     Multiselect = false,
                     InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop)
                 };
@@ -148,7 +158,7 @@ namespace InstantPaster.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Произошла ошибка чтения из файла", "Ошибка", MessageBoxButtons.OK,
+                MessageBox.Show(Resources.FailedToLoadConfiguration, Resources.ErrorTitle, MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }
         }
@@ -178,11 +188,11 @@ namespace InstantPaster.ViewModels
 
             var closeAction = new Action<string>(_content =>
             {
-                SelectedHotKey.PastedText = _content;
+                SelectedHotKey.Content = _content;
                 detailsWindow.Close();
             });
 
-            detailsWindow.DataContext = new DetailViewModel(closeAction, SelectedHotKey.PastedText);
+            detailsWindow.DataContext = new DetailViewModel(closeAction, SelectedHotKey.Content);
 
             detailsWindow.ShowDialog();
 
@@ -195,7 +205,7 @@ namespace InstantPaster.ViewModels
             {
                 var result = m_configurationSerializer.Serialize(new Configuration(HotKeys.Select(_hotKey =>
                     new HotKeySettings(_hotKey.HotKey, _hotKey.Description, _hotKey.SelectedActionType,
-                        _hotKey.PastedText)).ToList()));
+                        _hotKey.Content)).ToList()));
 
                 File.WriteAllText(_savePath, result);
 
@@ -203,7 +213,7 @@ namespace InstantPaster.ViewModels
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Произошла ошибка при сохранении в файл", "Ошибка", MessageBoxButtons.OK,
+                MessageBox.Show(Resources.SaveErrorMessage, Resources.ErrorTitle, MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }
         }
@@ -216,7 +226,7 @@ namespace InstantPaster.ViewModels
                 InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
                 DefaultExt = "hkconf",
                 AddExtension = true,
-                Filter = "HotKeysConfiguration|*.hkconf;"
+                Filter = Resources.OpenSaveDIalogFilter
             };
 
             var saveResult = fileBrowser.ShowDialog();
@@ -232,15 +242,19 @@ namespace InstantPaster.ViewModels
             Clipboard.SetText(_content);
 
             SendKeys.SendWait("^v");
-
-            Console.WriteLine($"Sended {_content}");
         }
 
         private void Execute(string _content)
         {
-            Process.Start(_content);
-
-            Console.WriteLine("Executed");
+            try
+            {
+                Process.Start(_content);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(string.Format(Resources.FailedToExecute, _content), Resources.ErrorTitle,
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

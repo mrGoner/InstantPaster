@@ -47,10 +47,7 @@ namespace InstantPaster.Hook
                 }
 
                 if (needHandle)
-                {
                     _e.Handled = true;
-                    Console.WriteLine("Handeled");
-                }
 
                 action?.Invoke();
             }

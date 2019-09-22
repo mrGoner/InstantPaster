@@ -3,9 +3,15 @@
                     xmlns:local="clr-namespace:InstantPaster"
                     xmlns:viewModels="clr-namespace:InstantPaster.ViewModels"
                     xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
-                    xmlns:my="clr-namespace:InstantPaster.Settings">
+                    xmlns:my="clr-namespace:InstantPaster.Settings"
+                    xmlns:Properties="clr-namespace:InstantPaster.Properties"
+                    xmlns:converters="clr-namespace:InstantPaster.Converters">
 
     <DataTemplate DataType="{x:Type viewModels:MainViewModel}">
+        <DataTemplate.Resources>
+            <converters:ActionTypeToStringConverter x:Key="ActionTypeToStringConverter"/>
+            <converters:ActionTypesToLocalizedCollectionConverter x:Key="ActionTypesToLocalizedCollection"/>
+        </DataTemplate.Resources>
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="25"/>
@@ -13,11 +19,13 @@
                 <RowDefinition Height="50"/>
             </Grid.RowDefinitions>
             <Menu Grid.Row="0" Margin="2 0 2 0">
-                <MenuItem Header="Файл">
-                    <MenuItem Header="Новая конфигурация" Command="{Binding NewConfigurationCommand}"/>
+                <MenuItem Header="{x:Static Properties:Resources.FileHeader}">
+                    <MenuItem Header="{x:Static Properties:Resources.NewConfigurationHeader}" Command="{Binding NewConfigurationCommand}"/>
                     <MenuItem Header="Открыть" Command="{Binding LoadConfigurationCommand}"/>
-                    <MenuItem Name ="SaveMenuItem" IsEnabled="{Binding IsDocumentLoaded}" Header="Сохранить" Command="{Binding SaveConfigurationCommand}"/>
-                    <MenuItem Name ="SaveAsMenuItem" Header="Сохранить как" Command="{Binding SaveAsConfigurationCommand}"/>
+                    <MenuItem Name ="SaveMenuItem" IsEnabled="{Binding IsDocumentLoaded}" 
+                              Header="{x:Static Properties:Resources.SaveHeader}" Command="{Binding SaveConfigurationCommand}"/>
+                    <MenuItem Name ="SaveAsMenuItem" Header="{x:Static Properties:Resources.SaveAsHeader}"
+                              Command="{Binding SaveAsConfigurationCommand}"/>
                 </MenuItem>
             </Menu>
             <DataGrid Name="DataGrid" Grid.Row="1" ItemsSource="{Binding HotKeys}" Margin="2 5 2 0" 
@@ -41,20 +49,24 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellEditingTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="Описание" Binding="{Binding Description}" Width="200"/>
-                    <DataGridComboBoxColumn Header="Тип команды" SelectedItemBinding="{Binding SelectedActionType, UpdateSourceTrigger=PropertyChanged}">
+                    <DataGridTextColumn Header="{x:Static Properties:Resources.DescriptionHeader}" Binding="{Binding Description}" Width="200"/>
+                    <DataGridComboBoxColumn Header="{x:Static Properties:Resources.CommandType}"
+                                            SelectedItemBinding="{Binding SelectedActionType, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource ActionTypeToStringConverter}}">
                         <DataGridComboBoxColumn.ElementStyle>
                             <Style TargetType="{x:Type ComboBox}">
-                                <Setter Property="ItemsSource" Value="{Binding Path=DataContext.Actions, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+                                <Setter Property="ItemsSource" 
+                                        Value="{Binding Path=DataContext.Actions, RelativeSource={RelativeSource AncestorType={x:Type Window}}, Converter={StaticResource ActionTypesToLocalizedCollection}}" />
                             </Style>
                         </DataGridComboBoxColumn.ElementStyle>
                         <DataGridComboBoxColumn.EditingElementStyle>
                             <Style TargetType="{x:Type ComboBox}">
-                                <Setter Property="ItemsSource" Value="{Binding Path=DataContext.Actions, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" />
+                                <Setter Property="ItemsSource" 
+                                        Value="{Binding Path=DataContext.Actions, RelativeSource={RelativeSource AncestorType={x:Type Window}}, Converter={StaticResource ActionTypesToLocalizedCollection}}" />
                             </Style>
                         </DataGridComboBoxColumn.EditingElementStyle>
                     </DataGridComboBoxColumn>
-                    <DataGridTextColumn Header="Команда" Binding="{Binding PastedText, UpdateSourceTrigger=LostFocus}" Width="*">
+                    <DataGridTextColumn Header="{x:Static Properties:Resources.CommandContentHeader}" 
+                                        Binding="{Binding Content, UpdateSourceTrigger=LostFocus, ValidatesOnDataErrors=True}" Width="*">
                         <DataGridTextColumn.EditingElementStyle>
                             <Style TargetType="TextBox">
                                 <Setter Property="Template">
@@ -66,7 +78,8 @@
                                                     <ColumnDefinition Width="30"/>
                                                 </Grid.ColumnDefinitions>
                                                 <TextBox x:Name="TextField" 
-                                                         Text="{Binding PastedText, UpdateSourceTrigger=LostFocus}" Grid.Column="0" Grid.ColumnSpan="2"/>
+                                                         Text="{Binding Content, UpdateSourceTrigger=LostFocus}"
+                                                         Grid.Column="0" Grid.ColumnSpan="2"/>
                                                 <Button x:Name="OpenFileBrowserButton" Content="..."
                                                         Grid.Column="1" Command="{Binding OpenFileBrowserCommand}" Visibility="Collapsed"/>
                                             </Grid>
@@ -86,9 +99,9 @@
                 </DataGrid.Columns>
                 <DataGrid.ContextMenu>
                     <ContextMenu>
-                        <MenuItem Name="AddMenuItem" Header="Добавить" Command="{Binding AddHotKeyCommand}"/>
-                        <MenuItem Name="RemoveMenuItem" Header="Удалить" Command="{Binding RemoveHotKeyCommand}"/>
-                        <MenuItem Name="PropertiesMenuItem" Header="Подробнее" Command="{Binding OpenDetailsCommand}"/>
+                        <MenuItem Name="AddMenuItem" Header="{x:Static Properties:Resources.AddHeader}" Command="{Binding AddHotKeyCommand}"/>
+                        <MenuItem Name="RemoveMenuItem" Header="{x:Static Properties:Resources.DeleteHeader}" Command="{Binding RemoveHotKeyCommand}"/>
+                        <MenuItem Name="DetailMenuItem" Header="{x:Static Properties:Resources.DetailHeader}" Command="{Binding OpenDetailsCommand}"/>
                     </ContextMenu>
                 </DataGrid.ContextMenu>
                 <i:Interaction.Triggers>
@@ -100,12 +113,23 @@
                     </i:EventTrigger>
                 </i:Interaction.Triggers>
             </DataGrid>
+            <TextBlock Grid.Row="2" Margin="2">
+                <TextBlock.Text>
+                    <MultiBinding  StringFormat="{}{0} {1}">
+                        <Binding Source="{x:Static Properties:Resources.CountOfLoaded}"/>
+                        <Binding Path="HotKeys.Count"/>
+                    </MultiBinding>
+                </TextBlock.Text>
+            </TextBlock>
         </Grid>
         <DataTemplate.Triggers>
             <Trigger SourceName="DataGrid" Property="SelectedItem" Value="{x:Null}">
                 <Setter TargetName="RemoveMenuItem" Property="Visibility" Value="Collapsed"/>
-                <Setter TargetName="PropertiesMenuItem" Property="Visibility" Value="Collapsed"/>
+                <Setter TargetName="DetailMenuItem" Property="Visibility" Value="Collapsed"/>
             </Trigger>
+            <DataTrigger Binding="{Binding SelectedHotKey.SelectedActionType}" Value="{x:Static my:ActionType.ExecutePath}">
+                <Setter TargetName="DetailMenuItem" Property="Visibility" Value="Collapsed"/>
+            </DataTrigger>
         </DataTemplate.Triggers>
     </DataTemplate>
 
@@ -117,7 +141,7 @@
             </Grid.RowDefinitions>
             <TextBox Height="Auto" TextWrapping="Wrap" Text="{Binding Content, UpdateSourceTrigger= PropertyChanged}" 
                       Grid.Row="0" Margin="3" VerticalScrollBarVisibility="Auto"/>
-            <Button Content="Сохранить" Width="70" Grid.Row="1" HorizontalAlignment="Right" Margin="0 0 3 3" Command="{Binding CloseCommand}"/>
+            <Button Content="{x:Static Properties:Resources.SaveHeader}" Width="70" Grid.Row="1" HorizontalAlignment="Right" Margin="0 0 3 3" Command="{Binding CloseCommand}"/>
         </Grid>
     </DataTemplate>
 </ResourceDictionary>

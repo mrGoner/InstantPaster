@@ -118,58 +118,70 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="FailedToLoadConfiguration" xml:space="preserve">
-    <value>Failed to load configuration from file</value>
+    <value>Произошла ошибка чтения из файла</value>
+    <comment>Произошла ошибка чтения из файла</comment>
   </data>
   <data name="ErrorTitle" xml:space="preserve">
-    <value>Error
-</value>
-  </data>
-  <data name="OpenSaveDIalogFilter" xml:space="preserve">
-    <value>HotKeysConfiguration|*.hkconf;</value>
+    <value>Ошибка</value>
+    <comment>Ошибка</comment>
   </data>
   <data name="FailedToExecute" xml:space="preserve">
-    <value>Failed to execute file {0}</value>
+    <value>Произошла ошибка при запуске файла {0}</value>
+    <comment>Произошла ошибка при запуске файла {0}</comment>
   </data>
   <data name="SaveErrorMessage" xml:space="preserve">
-    <value>Failed to save configuration</value>
+    <value>Не удалось сохранить конфигурацию</value>
+    <comment>Не удалось сохранить конфигурацию</comment>
   </data>
   <data name="NewConfigurationHeader" xml:space="preserve">
-    <value>New configuration</value>
+    <value>Новая конфигурация</value>
+    <comment>Новая конфигурация</comment>
   </data>
   <data name="FileHeader" xml:space="preserve">
-    <value>File</value>
+    <value>Файл</value>
+    <comment>Файл</comment>
   </data>
   <data name="SaveHeader" xml:space="preserve">
-    <value>Save</value>
+    <value>Сохранить</value>
+    <comment>Сохранить</comment>
   </data>
   <data name="SaveAsHeader" xml:space="preserve">
-    <value>Save as</value>
+    <value>Сохранить как</value>
+    <comment>Сохранить как</comment>
   </data>
   <data name="AddHeader" xml:space="preserve">
-    <value>Add</value>
+    <value>Добавить</value>
+    <comment>Добавить</comment>
   </data>
   <data name="DeleteHeader" xml:space="preserve">
-    <value>Delete</value>
+    <value>Удалить</value>
+    <comment>Удалить</comment>
   </data>
   <data name="DetailHeader" xml:space="preserve">
-    <value>Detail</value>
+    <value>Подробнее</value>
+    <comment>Подробнее</comment>
   </data>
   <data name="CountOfLoaded" xml:space="preserve">
-    <value>Count of loaded:</value>
+    <value>Количество текущих команд:</value>
   </data>
   <data name="DescriptionHeader" xml:space="preserve">
-    <value>Description</value>
+    <value>Описание</value>
+    <comment>Описание</comment>
   </data>
   <data name="CommandType" xml:space="preserve">
-    <value>Command</value>
+    <value>Команда</value>
+    <comment>Команда</comment>
   </data>
   <data name="CommandContentHeader" xml:space="preserve">
-    <value>Command's content</value>
+    <value>Значение</value>
+    <comment>Значение</comment>
   </data>
   <data name="ActionTypeInsertTextString" xml:space="preserve">
-    <value>insert</value>
+    <value>вставка</value>
+    <comment>вставить текст</comment>
   </data>
   <data name="ActionTypeExecuteProcessString" xml:space="preserve">
-    <value>execute</value>
+    <value>запуск</value>
+    <comment>запустить процесс</comment>
   </data>
 </root>

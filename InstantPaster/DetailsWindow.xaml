@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:InstantPaster"
         mc:Ignorable="d"
-        Title="DetailsWindow" Height="300" Width="600">
+        Height="300" Width="600" MinHeight="150" MinWidth="300">
     <Grid>
         <ContentPresenter Content="{Binding}"/>
     </Grid>
