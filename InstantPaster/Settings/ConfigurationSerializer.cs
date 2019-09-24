@@ -25,7 +25,7 @@ namespace InstantPaster.Settings
                 {
                     var jCombination = new JObject
                     {
-                        new JProperty(PDescription, hotKey.Combination),
+                        new JProperty(PDescription, hotKey.Description),
                         new JProperty(PCombination, hotKey.Combination),
                         new JProperty(PActionType, hotKey.ActionType.ToString()),
                         new JProperty(PActionContent, hotKey.ActionContent)

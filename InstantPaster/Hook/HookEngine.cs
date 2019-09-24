@@ -16,10 +16,10 @@ namespace InstantPaster.Hook
         public HookEngine()
         {
             m_hooks = Gma.System.MouseKeyHook.Hook.GlobalEvents();
-            m_hooks.KeyDown += HooksOnKeyDown;
+            m_hooks.KeyUp += HooksOnKeyUp;
         }
 
-        private void HooksOnKeyDown(object _sender, KeyEventArgs _e)
+        private void HooksOnKeyUp(object _sender, KeyEventArgs _e)
         {
             if(m_watchList == null || !m_isNeedTracking)
                 return;
@@ -97,7 +97,7 @@ namespace InstantPaster.Hook
 
         public void Dispose()
         {
-            m_hooks.KeyDown -= HooksOnKeyDown;
+            m_hooks.KeyUp -= HooksOnKeyUp;
             m_hooks.Dispose();
         }
     }

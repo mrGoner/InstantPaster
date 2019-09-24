@@ -6,9 +6,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
+using System.Windows.Threading;
 using InstantPaster.Hook;
 using InstantPaster.Properties;
 using InstantPaster.Settings;
@@ -107,6 +109,9 @@ namespace InstantPaster.ViewModels
             StopTracking = new ActionCommand(() => m_hookEngine.StopTracking());
             StartTracking = new ActionCommand(() => m_hookEngine.StartTracking());
             OpenDetailsCommand = new ActionCommand(OpenDetailsWindow);
+
+            if (File.Exists(Properties.Settings.Default.LastOpenedFile))
+                LoadFromFile(Properties.Settings.Default.LastOpenedFile);
         }
 
         private void HotKeyViewModelChanged()
@@ -132,28 +137,7 @@ namespace InstantPaster.ViewModels
 
                 if (openResult.HasValue && openResult.Value)
                 {
-                    var data = File.ReadAllText(folderBrowser.FileName);
-                    var settings = m_configurationSerializer.Deserialize(data).HotKeys;
-                    var hotKeyConfigurations = settings.Select(_hotKey => m_factory.Create(_hotKey)).ToList();
-
-                    m_hookEngine.SetHotKeys(hotKeyConfigurations);
-
-                    var viewModels = settings.Select(_x =>
-                        new HotKeyViewModel(_x.Combination, _x.Description, _x.ActionContent, _x.ActionType)).ToList();
-
-                    foreach (var hotKeyViewModel in viewModels)
-                    {
-                        hotKeyViewModel.CombinationChanged += HotKeyViewModelChanged;
-                    }
-
-                    HotKeys = new ObservableCollection<HotKeyViewModel>(viewModels);
-
-                    m_hookEngine.StartTracking();
-
-                    IsDocumentLoaded = true;
-                    m_loadedDocumentPath = folderBrowser.FileName;
-
-                    OnPropertyChanged(nameof(HotKeys));
+                    LoadFromFile(folderBrowser.FileName);
                 }
             }
             catch (Exception ex)
@@ -161,6 +145,35 @@ namespace InstantPaster.ViewModels
                 MessageBox.Show(Resources.FailedToLoadConfiguration, Resources.ErrorTitle, MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }
+        }
+
+        private void LoadFromFile(string _pathToFile)
+        {
+            var data = File.ReadAllText(_pathToFile);
+            var settings = m_configurationSerializer.Deserialize(data).HotKeys;
+            var hotKeyConfigurations = settings.Select(_hotKey => m_factory.Create(_hotKey)).ToList();
+
+            m_hookEngine.SetHotKeys(hotKeyConfigurations);
+
+            var viewModels = settings.Select(_x =>
+                new HotKeyViewModel(_x.Combination, _x.Description, _x.ActionContent, _x.ActionType)).ToList();
+
+            foreach (var hotKeyViewModel in viewModels)
+            {
+                hotKeyViewModel.CombinationChanged += HotKeyViewModelChanged;
+            }
+
+            HotKeys = new ObservableCollection<HotKeyViewModel>(viewModels);
+
+            m_hookEngine.StartTracking();
+
+            IsDocumentLoaded = true;
+            m_loadedDocumentPath = _pathToFile;
+
+            Properties.Settings.Default.LastOpenedFile = m_loadedDocumentPath;
+            Properties.Settings.Default.Save();
+
+            OnPropertyChanged(nameof(HotKeys));
         }
 
         private void ClearCurrentConfiguration()
@@ -174,6 +187,9 @@ namespace InstantPaster.ViewModels
             
             HotKeys.Clear();
             IsDocumentLoaded = false;
+
+            Properties.Settings.Default.LastOpenedFile = string.Empty;
+            Properties.Settings.Default.Save();
         }
 
         private void OpenDetailsWindow()
@@ -239,10 +255,18 @@ namespace InstantPaster.ViewModels
 
         private void PastText(string _content)
         {
-            Clipboard.SetText(_content);
+            Task.Factory.StartNew(async () =>
+            {
+                await Task.Delay(100);
 
-            SendKeys.SendWait("^v");
+                App.Current.Dispatcher.Invoke(() => 
+                {
+                    Clipboard.SetText(_content);
+                    SendKeys.SendWait("^v");
+                });
+            });
         }
+
 
         private void Execute(string _content)
         {
