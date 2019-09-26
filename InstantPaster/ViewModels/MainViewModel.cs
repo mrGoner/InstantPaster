@@ -257,13 +257,16 @@ namespace InstantPaster.ViewModels
         {
             Task.Factory.StartNew(async () =>
             {
-                await Task.Delay(100);
-
                 App.Current.Dispatcher.Invoke(() => 
                 {
                     Clipboard.SetText(_content);
-                    SendKeys.SendWait("^v");
                 });
+                
+                SendKeys.SendWait("%");
+
+                await Task.Delay(100);
+
+                SendKeys.SendWait("^v");
             });
         }
 

@@ -29,7 +29,6 @@ namespace InstantPaster.Hook
                 var state = KeyboardState.GetCurrent();
                 Action action = null;
                 var maxLength = 0;
-                var needHandle = false;
 
                 foreach (var current in element)
                 {
@@ -43,11 +42,7 @@ namespace InstantPaster.Hook
 
                     maxLength = current.Key.ChordLength;
                     action = current.Value;
-                    needHandle = true;
                 }
-
-                if (needHandle)
-                    _e.Handled = true;
 
                 action?.Invoke();
             }
