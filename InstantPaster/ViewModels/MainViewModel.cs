@@ -6,16 +6,13 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
-using System.Windows.Threading;
 using InstantPaster.Hook;
 using InstantPaster.Properties;
 using InstantPaster.Settings;
 using Microsoft.Expression.Interactivity.Core;
-using Clipboard = System.Windows.Clipboard;
 using MessageBox = System.Windows.Forms.MessageBox;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 
@@ -255,21 +252,9 @@ namespace InstantPaster.ViewModels
 
         private void PastText(string _content)
         {
-            Task.Factory.StartNew(async () =>
-            {
-                App.Current.Dispatcher.Invoke(() => 
-                {
-                    Clipboard.SetText(_content);
-                });
-                
-                SendKeys.SendWait("%");
-
-                await Task.Delay(100);
-
-                SendKeys.SendWait("^v");
-            });
+            if (!PasteHelper.TryPaste(_content))
+                MessageBox.Show(Resources.FailedToPasteMessageText, Resources.ErrorTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
-
 
         private void Execute(string _content)
         {

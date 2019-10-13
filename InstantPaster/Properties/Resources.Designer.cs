@@ -170,6 +170,15 @@ namespace InstantPaster.Properties {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Failed to paste text.
+        /// </summary>
+        public static string FailedToPasteMessageText {
+            get {
+                return ResourceManager.GetString("FailedToPasteMessageText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на File.
         /// </summary>
         public static string FileHeader {

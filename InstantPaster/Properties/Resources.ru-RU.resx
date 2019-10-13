@@ -184,4 +184,8 @@
     <value>запуск</value>
     <comment>запустить процесс</comment>
   </data>
+  <data name="FailedToPasteMessageText" xml:space="preserve">
+    <value>Не удалось вставить текст</value>
+    <comment>Не удалось вставить текст</comment>
+  </data>
 </root>
